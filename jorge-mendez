@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="assets/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+<link rel="stylesheet" href="assets/css/pgrw.css">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+<script src="assets/js/jquery-3.3.1.min.js"></script>
+<script src="assets/js/popper.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/pgrw.js"></script>
+<title>Test</title>
+</head>
+<body>
+    <main role="main" class="inner cover">
+    	<header id="top">
+        	<div class="container">
+                <nav class="navbar navbar-default navbar-expand-lg nav nav-masthead justify-content-center fixed-top pt-5">
+                    <a class="navbar-brand" href="#"></a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ml-auto justify-content-right">
+                            <li class="nav-item mr-3">
+                                <a class="btn btn-link" href="#page1"><span class="text-white">Page 1</span></a>
+                            </li>
+                            <li class="nav-item mr-3">
+                                <a class="btn btn-link" href="#page2"><span class="text-white">Page 2</span></a>
+                            </li>
+                            <li class="nav-item mr-3">
+                                <a class="btn btn-link" href="#page3"><span class="text-white">Page 3</span></a>
+                            </li>
+                            <li class="nav-item mr-3">
+                                <a class="btn btn-light" href="#top" style="width:150px;">Top</a>
+                            </li>
+                            <li class="nav-item mr-3">
+                                <a class="btn btn-outline-light" href="#bottom" style="width:150px;">Bottom</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <div id="myCarousel" class="carousel slide position-relative"  data-json="assets/17ocpi.json">
+        	<div class="content position-static"></div>
+            <div class="bottom"><a href="#bottom" class="btn btn-secondary btn-go-to">Go to Bottom</a></div>
+        </div>
+        <section id="page1">
+        	<div class="container p-5">
+            	<div class="row">
+                	<h1 class="col text-center pt-5 pb-5 text-white">PAGE 1 <strong>CHECK FIELDS</strong></h1>
+                </div>
+                <div class="row">
+                	<div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 1
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 2
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 3
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row pt-5">
+                	<div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 4
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 5
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white text-right">
+                    	QUESTION 6
+                    </div>
+                    <div class="col-md-2 col-xs-6 text-white p-0">
+                        <select class="mdb-select p-3 col text-center">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-5 p-5 text-white" style="background-color:#512182;">
+                	Question Change:.... true<br />
+                    Question Change:.... false
+                </div>
+                <div class="row p-5 text-white">
+                	* If  any answers on the form is "Yes" then the console must show a "true" message.<br />
+                    * If  all answers on the form are "No", then the console must show a "false" messsage.
+                </div>
+            </div>
+            <div class="bottom"><a href="#bottom" class="btn btn-secondary btn-go-to">Go to Bottom</a></div>
+        </section>
+        <section id="page2">
+        	<div class="container p-5">
+            	<div class="row">
+                	<h1 class="col text-center pt-5  text-white">PAGE 2 <strong>TEXT</strong></h1>
+                </div>
+                <div class="row">
+                	<div class="col-md-6 col-xs-12 text-white mt-2">
+                    	Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                    </div>
+                    <div class="col-md-6 col-xs-12 text-white mt-2">A
+                        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+                    </div>
+                </div>
+                <div class="row pt-3">
+                	<div class="col-md-6 col-xs-12 text-white mt-2">
+                    	Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+                    </div>
+                    <div class="col-md-6 col-xs-12 text-white mt-2">
+                        It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+                    </div>
+                </div>
+            </div>
+            <div class="bottom"><a  href="#bottom" class="btn btn-secondary btn-go-to">Go to Bottom</a></div>
+        </section>
+        <section id="page3">
+        	<div class="container p-5">
+            	<div class="row">
+                	<h1 class="col text-center pt-5  text-white">PAGE 3 <strong>JUST IMAGES</strong></h1>
+                </div>
+                <div class="row">
+                	<div class="col-md-4 col-xs-12 text-black mt-2">
+                    	<div class="just-image text-center">
+	                    	<img src="images/card-1.png" class="img-fluid" />
+                            <div class="p-5">
+                            	SO NICE
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-xs-12 text-black  mt-2">
+                    	<div class="just-image text-center">
+	                    	<img src="images/card-2.png" class="img-fluid" />
+                            <div class="p-5">
+                            	SO COOL
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-xs-12 text-black mt-2">
+	                    <div class="just-image text-center">
+	                    	<img src="images/card-3.png" class="img-fluid" />
+                            <div class="p-5">
+                            	SO PEACEFUL
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom"><a href="#bottom" class="btn btn-secondary btn-go-to">Go to Bottom</a></div>
+        </section>
+        <section id="bottom">
+        	<div class="container container-100">
+            	<div class="vertical-set">
+					<h1 class="text-center text-white">THANK <strong>YOU</strong></h1>
+                </div>
+            </div>
+            <div class="bottom"><a href="#top" class="btn btn-secondary btn-go-to">Go to Header</a></div>
+        </section>
+	</main>	
+</body>
+</html>
