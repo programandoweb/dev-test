@@ -226,7 +226,7 @@ if ! docker inspect -f '{{.State.Running}}' fisioproai-agent 2>/dev/null | grep 
   AGENT_PORT=$(choose_port) || die "No hay puerto agente libre."
   say "Puerto agente $OLD_AGENT_PORT ocupado; nuevo puerto $AGENT_PORT"
 fi
-printf 'APACHE_PORT=%q\\nFRONTEND_PORT=%q\\nAGENT_PORT=%q\\n' "$APACHE_PORT" "$FRONTEND_PORT" "$AGENT_PORT" > /etc/fisioproai-ports.env
+printf 'APACHE_PORT=%q\nFRONTEND_PORT=%q\nAGENT_PORT=%q\n' "$APACHE_PORT" "$FRONTEND_PORT" "$AGENT_PORT" > /etc/fisioproai-ports.env
 setenv infrastructure/.env FRONTEND_PORT "$FRONTEND_PORT"
 setenv infrastructure/.env AGENT_PORT "$AGENT_PORT"
 setenv backend/.env AGENT_URL "http://127.0.0.1:$AGENT_PORT"
