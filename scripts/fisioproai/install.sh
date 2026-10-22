@@ -120,7 +120,9 @@ fi
 say "Verificando llave y clonando"
 GIT_SSH_COMMAND="ssh -F /root/.ssh/config" git ls-remote "$REPO" HEAD >/dev/null || die "La llave aún no tiene acceso al repositorio."
 if [ -d "$ROOT/.git" ]; then
-  git -C "$ROOT" pull --ff-only
+  git -C "$ROOT" fetch origin main
+  git -C "$ROOT" branch --set-upstream-to=origin/main main 2>/dev/null || true
+  git -C "$ROOT" pull --ff-only origin main
 elif [ -z "$(ls -A "$ROOT")" ]; then
   git clone --branch main "$REPO" "$ROOT"
 else
