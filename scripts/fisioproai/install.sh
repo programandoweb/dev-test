@@ -32,9 +32,32 @@ else
   printf 'APACHE_PORT=%q\nFRONTEND_PORT=%q\nAGENT_PORT=%q\n' "$APACHE_PORT" "$FRONTEND_PORT" "$AGENT_PORT" > /etc/fisioproai-ports.env
   chmod 600 /etc/fisioproai-ports.env
 fi
-say "Configurando VirtualHost en puerto $APACHE_PORT"
-if ! grep -qE "^Listen $APACHE_PORT$" /etc/apache2/ports.conf; then echo "Listen $APACHE_PORT" >> /etc/apache2/ports.conf; fi
-cat > "$CONF" <<EOF
+say "Revisando VirtualHost de $DOMAIN en puerto $APACHE_PORT"
+mkdir -p /var/log/apache2 "$ROOT/backend/public"
+if ! grep -qE "^[[:space:]]*Listen[[:space:]]+$APACHE_PORT([[:space:]]|$)" /etc/apache2/ports.conf; then
+  echo "Listen $APACHE_PORT" >> /etc/apache2/ports.conf
+fi
+# Conservar configuración existente si corresponde a este dominio, puerto y document root.
+REWRITE_VHOST=0
+if [ ! -f "$CONF" ]; then
+  REWRITE_VHOST=1
+else
+  if ! grep -Fq "ServerName $DOMAIN" "$CONF" || ! grep -Fq "<VirtualHost *:$APACHE_PORT>" "$CONF" || ! grep -Fq "DocumentRoot $ROOT/backend/public" "$CONF"; then
+    REWRITE_VHOST=1
+  fi
+  if grep -Fq '\\$\\{APACHE_LOG_DIR\\}' "$CONF" || grep -Fq '/etc/apache2/$' "$CONF"; then
+    REWRITE_VHOST=1
+  fi
+  if ! grep -Fq 'ErrorLog /var/log/apache2/fisioproai-error.log' "$CONF"; then
+    REWRITE_VHOST=1
+  fi
+fi
+if [ "$REWRITE_VHOST" -eq 1 ]; then
+  if [ -f "$CONF" ]; then
+    cp -a "$CONF" "$CONF.backup.$(date +%Y%m%d-%H%M%S)"
+    say "Respaldo del VirtualHost existente creado"
+  fi
+  cat > "$CONF" <<EOF
 <VirtualHost *:$APACHE_PORT>
  ServerName $DOMAIN
  DocumentRoot $ROOT/backend/public
@@ -43,14 +66,16 @@ cat > "$CONF" <<EOF
   Options FollowSymLinks
   Require all granted
  </Directory>
- <FilesMatch \.php$>
+ <FilesMatch \\.php$>
   SetHandler "proxy:unix:/run/php/php8.4-fpm.sock|fcgi://localhost/"
  </FilesMatch>
  ErrorLog /var/log/apache2/fisioproai-error.log
  CustomLog /var/log/apache2/fisioproai-access.log combined
 </VirtualHost>
 EOF
-# php handler used literally in rendered conf.
+else
+  say "VirtualHost existente válido; se conserva"
+fi
 a2enmod rewrite proxy proxy_fcgi setenvif >/dev/null
 a2ensite "$DOMAIN.conf" >/dev/null
 apache2ctl configtest || die "Configuración Apache inválida"
