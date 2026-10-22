@@ -83,11 +83,13 @@ systemctl reload apache2
 say "Configurando identidad SSH exclusiva"
 if [ ! -f "$KEY" ]; then ssh-keygen -t ed25519 -N '' -f "$KEY" -C "fisioproai-vps" >/dev/null; fi
 chmod 600 "$KEY"
-ssh-keyscan -t ed25519 github.com 2>/dev/null > /root/.ssh/fisioproai_known_hosts
-# GitHub ED25519 host fingerprint must be verified against GitHub documentation.
+# Anclar la clave pública ED25519 de GitHub publicada oficialmente.
+# No sustituirla por ssh-keyscan sin validación.
+printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > /root/.ssh/fisioproai_known_hosts
+chmod 600 /root/.ssh/fisioproai_known_hosts
 EXPECTED="SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU"
 ACTUAL=$(ssh-keygen -lf /root/.ssh/fisioproai_known_hosts -E sha256 | awk 'NR==1 {print $2}')
-[ "$ACTUAL" = "$EXPECTED" ] || die "La identidad SSH de github.com no coincide."
+[ "$ACTUAL" = "$EXPECTED" ] || die "La huella de la clave oficial de GitHub no coincide."
 if ! grep -q '^Host github-fisioproai$' /root/.ssh/config 2>/dev/null; then
 cat >> /root/.ssh/config <<EOF
 
@@ -101,12 +103,20 @@ Host github-fisioproai
 EOF
 fi
 chmod 600 /root/.ssh/config
-echo
-echo "=== COPIA SOLO ESTA CLAVE PUBLICA A GITHUB DEPLOY KEYS ==="
-cat "$KEY.pub"
-echo "https://github.com/programandoweb/FisioProAI/settings/keys"
-echo "Add deploy key -> SIN Allow write access"
-read -r -p "Pulsa ENTER después de registrarla... " _
+GIT_SSH_COMMAND="ssh -F /root/.ssh/config"
+if $GIT_SSH_COMMAND -T git@github-fisioproai 2>&1 | grep -Eq 'successfully authenticated|Hi .*FisioProAI'; then
+  say "Clave SSH ya autenticada."
+else
+  if GIT_SSH_COMMAND="$GIT_SSH_COMMAND" git ls-remote "$REPO" HEAD >/dev/null 2>&1; then
+    say "Deploy key ya registrada y con acceso al repositorio."
+  else
+    echo
+    echo "=== REGISTRA ESTA CLAVE PUBLICA EN GITHUB DEPLOY KEYS ==="
+    cat "$KEY.pub"
+    echo "https://github.com/programandoweb/FisioProAI/settings/keys"
+    read -r -p "Pulsa ENTER después de registrarla... " _
+  fi
+fi
 say "Verificando llave y clonando"
 GIT_SSH_COMMAND="ssh -F /root/.ssh/config" git ls-remote "$REPO" HEAD >/dev/null || die "La llave aún no tiene acceso al repositorio."
 if [ -d "$ROOT/.git" ]; then
