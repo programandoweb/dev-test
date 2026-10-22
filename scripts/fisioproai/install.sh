@@ -185,6 +185,52 @@ setenv frontend/.env NEXT_PUBLIC_API_URL "https://$DOMAIN/api/v1"
 setenv frontend/.env API_INTERNAL_URL "http://host.docker.internal:$APACHE_PORT"
 setenv infrastructure/.env FRONTEND_PORT "$FRONTEND_PORT"
 setenv infrastructure/.env AGENT_PORT "$AGENT_PORT"
+# Revisar puertos efectivos antes de Docker Compose, incluso en reintentos.
+# ss no detecta siempre puertos reservados por el proxy de Docker.
+port_busy() {
+  local p="$1"
+  if ss -H -ltn | awk '{print $4}' | grep -Eq "[:.]$p$"; then return 0; fi
+  if docker ps --format '{{.Ports}}' | grep -Eq "(0\\.0\\.0\\.0|127\\.0\\.0\\.1|\\[::\\]):$p->"; then return 0; fi
+  if ! PORT_CHECK="$p" python3 - <<'PY'
+import os,socket
+port=int(os.environ["PORT_CHECK"])
+for host in ("0.0.0.0","127.0.0.1"):
+    sock=socket.socket()
+    try:
+        sock.bind((host,port))
+    except OSError:
+        raise SystemExit(1)
+    finally:
+        sock.close()
+PY
+  then return 0; fi
+  return 1
+}
+choose_port() {
+  local p
+  for p in $(seq 32000 32999); do
+    if [ "$p" != "$APACHE_PORT" ] && [ "$p" != "$FRONTEND_PORT" ] && [ "$p" != "$AGENT_PORT" ] && ! port_busy "$p"; then
+      echo "$p"; return 0
+    fi
+  done
+  return 1
+}
+# Conservar puertos si son utilizados por contenedores FisioProAI en funcionamiento.
+if ! docker inspect -f '{{.State.Running}}' fisioproai-frontend 2>/dev/null | grep -qx true && port_busy "$FRONTEND_PORT"; then
+  OLD_FRONTEND_PORT="$FRONTEND_PORT"
+  FRONTEND_PORT=$(choose_port) || die "No hay puerto frontend libre."
+  say "Puerto frontend $OLD_FRONTEND_PORT ocupado; nuevo puerto $FRONTEND_PORT"
+fi
+if ! docker inspect -f '{{.State.Running}}' fisioproai-agent 2>/dev/null | grep -qx true && port_busy "$AGENT_PORT"; then
+  OLD_AGENT_PORT="$AGENT_PORT"
+  AGENT_PORT=$(choose_port) || die "No hay puerto agente libre."
+  say "Puerto agente $OLD_AGENT_PORT ocupado; nuevo puerto $AGENT_PORT"
+fi
+printf 'APACHE_PORT=%q\\nFRONTEND_PORT=%q\\nAGENT_PORT=%q\\n' "$APACHE_PORT" "$FRONTEND_PORT" "$AGENT_PORT" > /etc/fisioproai-ports.env
+setenv infrastructure/.env FRONTEND_PORT "$FRONTEND_PORT"
+setenv infrastructure/.env AGENT_PORT "$AGENT_PORT"
+setenv backend/.env AGENT_URL "http://127.0.0.1:$AGENT_PORT"
+
 mkdir -p /var/lib/fisioproai/clinical backend/storage/framework/{cache,sessions,views} backend/bootstrap/cache
 chown -R www-data:www-data /var/lib/fisioproai backend/storage backend/bootstrap/cache
 chmod 750 /var/lib/fisioproai/clinical
