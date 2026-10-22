@@ -15,7 +15,7 @@ mkdir -p "$ROOT" /root/.ssh
 chmod 700 /root/.ssh
 say "Preparando dependencias del host"
 apt-get update
-apt-get install -y git curl ca-certificates openssh-client apache2 libapache2-mod-fcgid php8.4-cli php8.4-fpm php8.4-mysql php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl php8.4-redis unzip mariadb-server redis-server supervisor composer openssl python3
+apt-get install -y git curl ca-certificates openssh-client apache2 libapache2-mod-fcgid php8.4-cli php8.4-fpm php8.4-mysql php8.4-mbstring php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl php8.4-redis iproute2 unzip mariadb-server redis-server supervisor composer openssl python3
 command -v docker >/dev/null || die "Docker no está instalado. Instalar Docker Engine + Compose v2 antes de continuar."
 docker compose version >/dev/null || die "Falta docker compose v2."
 systemctl enable --now apache2 php8.4-fpm mariadb redis-server supervisor docker
@@ -128,9 +128,11 @@ setenv backend/.env AGENT_URL "http://127.0.0.1:$AGENT_PORT"
 setenv backend/.env CLINICAL_DISK_ROOT /var/lib/fisioproai/clinical
 SECRET=$(openssl rand -hex 32)
 setenv backend/.env INTERNAL_API_SECRET "$SECRET"
+SECRET=$(grep '^INTERNAL_API_SECRET=' backend/.env | cut -d= -f2-)
 setenv agent/.env INTERNAL_API_SECRET "$SECRET"
 JWT=$(openssl rand -hex 32)
 setenv backend/.env SOCKET_JWT_SECRET "$JWT"
+JWT=$(grep '^SOCKET_JWT_SECRET=' backend/.env | cut -d= -f2-)
 setenv agent/.env SOCKET_JWT_SECRET "$JWT"
 setenv agent/.env WHATSAPP_CREDS_KEY "$(openssl rand -base64 32)"
 setenv agent/.env CORS_ORIGINS "https://$DOMAIN"
@@ -142,6 +144,44 @@ setenv infrastructure/.env AGENT_PORT "$AGENT_PORT"
 mkdir -p /var/lib/fisioproai/clinical backend/storage/framework/{cache,sessions,views} backend/bootstrap/cache
 chown -R www-data:www-data /var/lib/fisioproai backend/storage backend/bootstrap/cache
 chmod 750 /var/lib/fisioproai/clinical
+# Redis aislado en 6381: no alterar Redis global utilizado por otros proyectos.
+REDIS_HOST_IP=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+[ -n "$REDIS_HOST_IP" ] || die "Docker no tiene gateway bridge."
+REDIS_PASS_FILE=/etc/fisioproai-redis.password
+if [ ! -f "$REDIS_PASS_FILE" ]; then openssl rand -hex 32 > "$REDIS_PASS_FILE"; chmod 600 "$REDIS_PASS_FILE"; fi
+REDIS_PASS=$(cat "$REDIS_PASS_FILE")
+mkdir -p /var/lib/fisioproai/redis
+cat > /etc/fisioproai-redis.conf <<EOF
+bind 127.0.0.1 $REDIS_HOST_IP
+port 6381
+protected-mode yes
+requirepass $REDIS_PASS
+dir /var/lib/fisioproai/redis
+appendonly yes
+daemonize no
+loglevel notice
+EOF
+cat > /etc/systemd/system/fisioproai-redis.service <<EOF
+[Unit]
+Description=FisioProAI isolated Redis
+After=network.target docker.service
+Requires=docker.service
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/redis-server /etc/fisioproai-redis.conf
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now fisioproai-redis
+systemctl restart fisioproai-redis
+REDISCLI_AUTH="$REDIS_PASS" redis-cli -p 6381 ping | grep -qx PONG || die "Redis FisioProAI no responde."
+setenv backend/.env REDIS_PORT 6381
+setenv backend/.env REDIS_PASSWORD "$REDIS_PASS"
+setenv agent/.env REDIS_URL "redis://:$REDIS_PASS@host.docker.internal:6381"
+# Redis se escucha solo en loopback y gateway Docker (no en IP pública).
 say "Desplegando Laravel y contenedores"
 cd backend
 composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
@@ -152,11 +192,6 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 cd ..
-# Redis must accept docker host-gateway traffic for the agent; do not expose 6379 publicly.
-REDIS_HOST_IP=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
-if [ -n "$REDIS_HOST_IP" ]; then
-  say "Verifica manualmente Redis para Docker: bind 127.0.0.1 y $REDIS_HOST_IP, protegido por firewall"
-fi
 docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env up -d --build
 apache2ctl configtest
 curl -fsS "http://127.0.0.1:$APACHE_PORT/api/v1/health" || echo "Aviso: revisar endpoint de salud Laravel"
