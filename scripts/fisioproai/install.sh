@@ -114,7 +114,13 @@ if [ -d "$ROOT/.git" ]; then
 elif [ -z "$(ls -A "$ROOT")" ]; then
   git clone --branch main "$REPO" "$ROOT"
 else
-  die "$ROOT no está vacío y no contiene .git; se preservaron los archivos."
+  # Detectar exclusivamente la estructura vacía creada por este instalador.
+  UNEXPECTED=$(find "$ROOT" -mindepth 1 ! -path "$ROOT/backend" ! -path "$ROOT/backend/public" -print -quit)
+  [ -z "$UNEXPECTED" ] || die "Archivos preexistentes en $ROOT: $UNEXPECTED. Sin cambios."
+  git -C "$ROOT" init
+  git -C "$ROOT" remote add origin "$REPO"
+  git -C "$ROOT" fetch --depth 1 origin main
+  git -C "$ROOT" checkout -B main FETCH_HEAD
 fi
 cd "$ROOT"
 say "Preparando env y base de datos"
