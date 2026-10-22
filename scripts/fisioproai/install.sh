@@ -46,8 +46,8 @@ cat > "$CONF" <<EOF
  <FilesMatch \.php$>
   SetHandler "proxy:unix:/run/php/php8.4-fpm.sock|fcgi://localhost/"
  </FilesMatch>
- ErrorLog \$\{APACHE_LOG_DIR\}/fisioproai-error.log
- CustomLog \$\{APACHE_LOG_DIR\}/fisioproai-access.log combined
+ ErrorLog /var/log/apache2/fisioproai-error.log
+ CustomLog /var/log/apache2/fisioproai-access.log combined
 </VirtualHost>
 EOF
 # php handler used literally in rendered conf.
