@@ -136,10 +136,10 @@ else
 fi
 cd "$ROOT"
 say "Preparando env y base de datos"
-cp -n backend/.env.example backend/.env
-cp -n agent/.env.example agent/.env
+cp --update=none backend/.env.example backend/.env
+cp --update=none agent/.env.example agent/.env
 [ -f frontend/.env ] || touch frontend/.env
-cp -n infrastructure/.env.example infrastructure/.env
+cp --update=none infrastructure/.env.example infrastructure/.env
 chmod 600 backend/.env agent/.env frontend/.env infrastructure/.env
 # Edición preservando valores existentes; variables secretas solo en archivos, no en argumentos de consola.
 setenv(){ local file="$1" key="$2" val="$3"; FILE="$file" FIELD="$key" VALUE="$val" python3 - <<'PY'
@@ -221,7 +221,21 @@ EOF
 systemctl daemon-reload
 systemctl enable --now fisioproai-redis
 systemctl restart fisioproai-redis
-REDISCLI_AUTH="$REDIS_PASS" redis-cli -p 6381 ping | grep -qx PONG || die "Redis FisioProAI no responde."
+REDIS_OK=0
+for attempt in $(seq 1 15); do
+  if REDISCLI_AUTH="$REDIS_PASS" redis-cli -h 127.0.0.1 -p 6381 ping 2>/dev/null | grep -qx PONG; then
+    REDIS_OK=1
+    break
+  fi
+  sleep 1
+done
+if [ "$REDIS_OK" -ne 1 ]; then
+  echo "ERROR: Redis FisioProAI no inició correctamente." >&2
+  systemctl status fisioproai-redis --no-pager -l >&2 || true
+  journalctl -u fisioproai-redis -n 40 --no-pager >&2 || true
+  ss -ltnp | grep ':6381' >&2 || true
+  die "Revisar el error detallado de Redis mostrado arriba."
+fi
 setenv backend/.env REDIS_PORT 6381
 setenv backend/.env REDIS_PASSWORD "$REDIS_PASS"
 setenv agent/.env REDIS_URL "redis://:$REDIS_PASS@host.docker.internal:6381"
