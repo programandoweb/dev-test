@@ -60,7 +60,7 @@ if [ ! -f "$KEY" ]; then ssh-keygen -t ed25519 -N '' -f "$KEY" -C "fisioproai-vp
 chmod 600 "$KEY"
 ssh-keyscan -t ed25519 github.com 2>/dev/null > /root/.ssh/fisioproai_known_hosts
 # GitHub ED25519 host fingerprint must be verified against GitHub documentation.
-EXPECTED="SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zP5J/fGSLkYGlbA"
+EXPECTED="SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU"
 ACTUAL=$(ssh-keygen -lf /root/.ssh/fisioproai_known_hosts -E sha256 | awk 'NR==1 {print $2}')
 [ "$ACTUAL" = "$EXPECTED" ] || die "La identidad SSH de github.com no coincide."
 if ! grep -q '^Host github-fisioproai$' /root/.ssh/config 2>/dev/null; then
