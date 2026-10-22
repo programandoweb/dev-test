@@ -104,7 +104,8 @@ import os
 from pathlib import Path
 p=Path(os.environ['FILE']); k=os.environ['FIELD']; v=os.environ['VALUE']
 lines=p.read_text().splitlines()
-if any(line.startswith(k+'=') and line[len(k)+1:].strip() not in ('','null','cambiar-por-secreto-largo-aleatorio') for line in lines):
+preserve={'DB_PASSWORD','INTERNAL_API_SECRET','SOCKET_JWT_SECRET','WHATSAPP_CREDS_KEY'}
+if k in preserve and any(line.startswith(k+'=') and line[len(k)+1:].strip() not in ('','null','cambiar-por-secreto-largo-aleatorio') for line in lines):
     raise SystemExit
 lines=[line for line in lines if not line.startswith(k+'=')]
 lines.append(k+'='+v)
