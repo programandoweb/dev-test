@@ -225,14 +225,19 @@ setenv backend/.env REDIS_PASSWORD "$REDIS_PASS"
 setenv agent/.env REDIS_URL "redis://:$REDIS_PASS@host.docker.internal:6381"
 # Redis se escucha solo en loopback y gateway Docker (no en IP pública).
 say "Desplegando Laravel y contenedores"
+# No alterar el PHP por defecto del VPS; usar PHP 8.4 expresamente.
+PHP_BIN=/usr/bin/php8.4
+[ -x "$PHP_BIN" ] || die "No está disponible PHP 8.4 CLI."
+"$PHP_BIN" -r 'if (!extension_loaded("intl") || !class_exists("Normalizer")) exit(1);' || die "PHP 8.4 CLI no carga intl/Normalizer. Revisar php8.4-intl."
+COMPOSER_BIN=$(command -v composer) || die "Composer no encontrado."
 cd backend
-composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-if ! grep -q '^APP_KEY=base64:' .env; then php artisan key:generate --force; fi
-php artisan migrate --force
-php artisan db:seed --class=ProductionSeeder --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+COMPOSER_ALLOW_SUPERUSER=1 "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+if ! grep -q '^APP_KEY=base64:' .env; then "$PHP_BIN" artisan key:generate --force; fi
+"$PHP_BIN" artisan migrate --force
+"$PHP_BIN" artisan db:seed --class=ProductionSeeder --force
+"$PHP_BIN" artisan config:cache
+"$PHP_BIN" artisan route:cache
+"$PHP_BIN" artisan view:cache
 cd ..
 docker compose -f infrastructure/docker-compose.yml --env-file infrastructure/.env up -d --build
 apache2ctl configtest
